@@ -1,0 +1,204 @@
+---
+- hosts: all
+  tasks:
+    - name: install node-exporter
+      apt: name=prometheus-node-exporter state=latest
+
+    - name: create node-exporter service - directory
+      file:
+        path: "/etc/service/node-exporter"
+        state: directory
+    - name: create node-exporter service - run
+      copy:
+        dest: "/etc/service/node-exporter/run"
+        content: |
+          #!/bin/sh
+
+          exec /usr/bin/prometheus-node-exporter --no-collector.systemd 2>&1
+      notify:
+        - restart node-exporter
+    - name: set node-exporter service permission
+      file:
+        path: "/etc/service/node-exporter/run"
+        state: file
+        mode: 0755
+
+    - name: start node-exporter
+      svc:
+          name: node-exporter
+          state: started
+          service_dir: /etc/service
+
+  handlers:
+    - name: restart node-exporter
+      svc: name=node-exporter state=restarted service_dir=/etc/service
+
+
+- hosts: t1
+  tasks:
+    - name: install prometheus
+      apt: name=prometheus state=latest
+
+    - template:
+        src: prometheus.yml.j2
+        dest: /etc/prometheus/prometheus.yml
+        mode: 0644
+      notify:
+        - restart prometheus
+
+    - name: create prometheus service - directory
+      file:
+        path: "/etc/service/prometheus"
+        state: directory
+    - name: create prometheus service - run
+      copy:
+        dest: "/etc/service/prometheus/run"
+        content: |
+          #!/bin/sh
+          exec /usr/bin/prometheus 2>&1
+      notify:
+        - restart prometheus
+    - name: set prometheus service permission
+      file:
+        path: "/etc/service/prometheus/run"
+        state: file
+        mode: 0755
+
+    - name: start prometheus
+      svc:
+          name: prometheus
+          state: started
+          service_dir: /etc/service
+
+  handlers:
+    - name: restart prometheus
+      svc: name=prometheus state=restarted service_dir=/etc/service
+
+
+- hosts: t3
+  tasks:
+    - name: install etcd
+      apt: 
+        name:
+          - etcd-server 
+          - etcd-client 
+        state: latest
+
+
+    - template:
+        src: etcd.conf.j2
+        dest: /etc/default/etcd
+        mode: 0644
+      notify:
+        - restart etcd
+
+
+
+    - name: create etcd service - directory
+      file:
+        path: "/etc/service/etcd"
+        state: directory
+    - name: create etcd service - run
+      copy:
+        dest: "/etc/service/etcd/run"
+        content: |
+          #!/bin/sh
+          
+          cd ~etcd
+ 
+          set -a
+          . /etc/default/etcd
+          set +a
+ 
+          exec gosu etcd /usr/bin/etcd 2>&1
+      notify:
+        - restart etcd
+    - name: set etcd service permission
+      file:
+        path: "/etc/service/etcd/run"
+        state: file
+        mode: 0755
+
+    - name: start etcd
+      svc:
+          name: etcd
+          state: started
+          service_dir: /etc/service
+
+  handlers:
+    - name: restart etcd
+      svc: name=etcd state=restarted service_dir=/etc/service
+
+
+- hosts: t2
+  tasks:
+    - name: install nginx
+      apt: name=nginx state=latest
+
+    - name: create nginx service - directory
+      file:
+        path: "/etc/service/nginx"
+        state: directory
+    - name: create nginx service - run
+      copy:
+        dest: "/etc/service/nginx/run"
+        content: |
+          #!/bin/sh
+
+          exec /usr/sbin/nginx -g 'daemon off;' 2>&1
+      notify:
+        - restart nginx
+    - name: set nginx service permission
+      file:
+        path: "/etc/service/nginx/run"
+        state: file
+        mode: 0755
+
+    - name: start nginx
+      svc:
+          name: nginx
+          state: started
+          service_dir: /etc/service
+
+  handlers:
+    - name: restart nginx
+      svc: name=nginx state=restarted service_dir=/etc/service
+
+
+- hosts: nginx_origin
+  tasks:
+    - template:
+        src: nginx_origin_vhost.conf.j2
+        dest: /etc/nginx/sites-enabled/default
+        mode: 0644
+      notify:
+        - restart nginx_origin
+    - copy:
+        dest: "/var/www/html/test.txt"
+        content: |
+          test
+      notify:
+        - restart nginx_origin
+
+  handlers:
+    - name: restart nginx_origin
+      svc: name=nginx state=restarted service_dir=/etc/service
+
+- hosts: nginx_cache
+  tasks:
+    - template:
+        src: nginx_cache_vhost.conf.j2
+        dest: /etc/nginx/sites-enabled/default
+        mode: 0644
+      notify:
+        - restart nginx_cache
+    - template:
+        src: nginx_cache_upstream.conf.j2
+        dest: /etc/nginx/conf.d/upstream.conf
+        mode: 0644
+      notify:
+        - restart nginx_cache
+
+  handlers:
+    - name: restart nginx_cache
+      svc: name=nginx state=restarted service_dir=/etc/service

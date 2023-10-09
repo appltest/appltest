@@ -1,0 +1,67 @@
+name: appltest
+
+services:
+  _debian:
+    image: "b_debian:latest"
+    build:
+      context: _debian
+    command: "echo done"
+    pull_policy: never
+    restart: "no"
+
+  # task: t0 -----------------------------------
+  ansible:
+    image: b_debian:latest
+    restart: always
+    pull_policy: never
+    volumes:
+      - ./_debian/ssh/id_rsa:/root/.ssh/id_rsa
+      - ./ansible:/opt/ansible
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+
+  # task: t1 -----------------------------------
+  monit:
+    image: b_debian:latest
+    restart: always
+    pull_policy: never
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "9090:9090"
+
+
+
+  # task: t2 -----------------------------------
+  nginx-origin:
+    image: b_debian:latest
+    restart: always
+    pull_policy: never
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8080:80"
+
+  nginx-cache:
+    image: b_debian:latest
+    restart: always
+    pull_policy: never
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "80:80"
+
+
+
+
+  # task: t3 -----------------------------------
+  etcd:
+    image: b_debian:latest
+    restart: always
+    pull_policy: never
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    deploy:
+      replicas: 5
+

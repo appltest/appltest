@@ -1,0 +1,11 @@
+# [member]
+ETCD_NAME="{{ansible_fqdn}}"
+ETCD_LISTEN_CLIENT_URLS="http://0.0.0.0:2379"
+
+# [cluster]
+ETCD_LISTEN_PEER_URLS="http://{{ansible_default_ipv4.address}}:2380"
+ETCD_ADVERTISE_CLIENT_URLS="http://{{ansible_default_ipv4.address}}:2379"
+ETCD_INITIAL_ADVERTISE_PEER_URLS="http://{{ansible_default_ipv4.address}}:2380"
+ETCD_INITIAL_CLUSTER="{% for host in groups['t3'] %}{{ hostvars[host]['ansible_fqdn'] }}=http://{{ hostvars[host]['ansible_default_ipv4']['address'] }}:2380{% if not loop.last %},{% endif %}{% endfor %}"
+ETCD_INITIAL_CLUSTER_STATE="new"
+ETCD_INITIAL_CLUSTER_TOKEN="etcd_token"

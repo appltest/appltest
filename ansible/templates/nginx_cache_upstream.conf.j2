@@ -1,0 +1,8 @@
+upstream origin {
+  keepalive 10;
+
+{% for svr in groups.nginx_origin %}
+  server {{ svr }}:80;
+{% endfor %}
+}
+

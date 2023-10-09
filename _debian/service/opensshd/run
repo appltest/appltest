@@ -1,0 +1,8 @@
+#!/bin/sh
+
+if [ ! -d /run/sshd ]; then
+    mkdir /run/sshd
+    chmod 0755 /run/sshd
+fi
+
+exec /usr/sbin/sshd -D
