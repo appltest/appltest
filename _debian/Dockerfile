@@ -23,6 +23,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY ssh/authorized_keys /root/.ssh/authorized_keys
+RUN chmod 600 /root/.ssh/authorized_keys && chown root.root /root/.ssh/authorized_keys
 ADD service /etc/service/
 
 #ENTRYPOINT service ssh restart && tail -f /dev/null
