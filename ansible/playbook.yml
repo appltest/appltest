@@ -11,17 +11,13 @@
     - name: create node-exporter service - run
       copy:
         dest: "/etc/service/node-exporter/run"
+        mode: 0755
         content: |
           #!/bin/sh
 
           exec /usr/bin/prometheus-node-exporter --no-collector.systemd 2>&1
       notify:
         - restart node-exporter
-    - name: set node-exporter service permission
-      file:
-        path: "/etc/service/node-exporter/run"
-        state: file
-        mode: 0755
 
     - name: start node-exporter
       svc:
@@ -53,16 +49,12 @@
     - name: create prometheus service - run
       copy:
         dest: "/etc/service/prometheus/run"
+        mode: 0755
         content: |
           #!/bin/sh
           exec /usr/bin/prometheus 2>&1
       notify:
         - restart prometheus
-    - name: set prometheus service permission
-      file:
-        path: "/etc/service/prometheus/run"
-        state: file
-        mode: 0755
 
     - name: start prometheus
       svc:
@@ -101,6 +93,7 @@
     - name: create etcd service - run
       copy:
         dest: "/etc/service/etcd/run"
+        mode: 0755
         content: |
           #!/bin/sh
           
@@ -113,11 +106,6 @@
           exec gosu etcd /usr/bin/etcd 2>&1
       notify:
         - restart etcd
-    - name: set etcd service permission
-      file:
-        path: "/etc/service/etcd/run"
-        state: file
-        mode: 0755
 
     - name: start etcd
       svc:
@@ -142,17 +130,13 @@
     - name: create nginx service - run
       copy:
         dest: "/etc/service/nginx/run"
+        mode: 0755
         content: |
           #!/bin/sh
 
           exec /usr/sbin/nginx -g 'daemon off;' 2>&1
       notify:
         - restart nginx
-    - name: set nginx service permission
-      file:
-        path: "/etc/service/nginx/run"
-        state: file
-        mode: 0755
 
     - name: start nginx
       svc:
