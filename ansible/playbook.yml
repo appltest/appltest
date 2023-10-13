@@ -70,10 +70,10 @@
 - hosts: t3
   tasks:
     - name: install etcd
-      apt: 
+      apt:
         name:
-          - etcd-server 
-          - etcd-client 
+          - etcd-server
+          - etcd-client
         state: latest
 
 
@@ -96,13 +96,13 @@
         mode: 0755
         content: |
           #!/bin/sh
-          
+
           cd ~etcd
- 
+
           set -a
           . /etc/default/etcd
           set +a
- 
+
           exec gosu etcd /usr/bin/etcd 2>&1
       notify:
         - restart etcd
