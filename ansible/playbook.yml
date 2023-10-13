@@ -202,3 +202,42 @@
   handlers:
     - name: restart nginx_cache
       svc: name=nginx state=restarted service_dir=/etc/service
+
+
+
+
+- hosts: nginx_origin
+  tasks:
+    - name: install vm_test script
+      copy:
+        src: "files/vm_test.sh"
+        dest: "/usr/local/bin/vm_test.sh"
+        mode: 0755
+      notify:
+        - restart vm_test
+
+    - name: create vm_test service - directory
+      file:
+        path: "/etc/service/vm_test"
+        state: directory
+    - name: create vm_test service - run
+      copy:
+        dest: "/etc/service/vm_test/run"
+        mode: 0755
+        content: |
+          #!/bin/sh
+
+          exec /usr/local/bin/vm_test.sh 2>&1
+      notify:
+        - restart vm_test
+
+    - name: start vm_test
+      svc:
+          name: vm_test
+          state: started
+          service_dir: /etc/service
+
+  handlers:
+    - name: restart vm_test
+      svc: name=vm_test state=restarted service_dir=/etc/service
+

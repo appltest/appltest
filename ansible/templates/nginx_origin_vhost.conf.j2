@@ -11,5 +11,10 @@ server {
         location / {
                 try_files $uri $uri/ =404;
         }
+
+
+        location /nginx_status {
+                stub_status on;
+        }
 }
 
